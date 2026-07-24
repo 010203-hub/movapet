@@ -806,6 +806,24 @@ section>.wrap{position:relative;z-index:1}
 @media (prefers-reduced-motion:reduce){.mc-stage.mc-flash .mc-swap{animation:none}}
 
 </style>
+
+<!-- ============ PIXEL DO FACEBOOK (META) ============
+     >>> COLE O ID DO SEU PIXEL NA LINHA ABAIXO (só números) <<<
+     Onde achar: Gerenciador de Eventos > Fontes de dados > seu Pixel > ID. -->
+<script>
+(function(){
+  var FB_PIXEL_ID = "COLE_AQUI_O_ID_DO_PIXEL"; /* ex.: "1234567890123456" */
+  if(!/^\d{5,}$/.test(FB_PIXEL_ID)) return; /* só ativa depois que você colar o ID */
+  !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+  n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+  n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+  t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
+  document,'script','https://connect.facebook.net/en_US/fbevents.js');
+  fbq('init', FB_PIXEL_ID);
+  fbq('track', 'PageView');
+})();
+</script>
+
 </head>
 <body>
 <div class="scroll-prog" id="scrollProg" aria-hidden="true"></div>
@@ -1840,6 +1858,67 @@ section>.wrap{position:relative;z-index:1}
       stage.addEventListener("animationend", function(){ stage.classList.remove("mc-flash"); });
     }
   }catch(err){ /* nunca derruba o resto do site */ }
+})();
+</script>
+
+
+<!-- ============ UTMIFY: script de UTMs (leva os parâmetros do anúncio até o checkout) ============ -->
+<script src="https://cdn.utmify.com.br/scripts/utms/latest.js" async defer></script>
+
+<!-- ============ RASTREAMENTO: reforço de UTMs + eventos do Pixel ============ -->
+<script>
+(function(){
+  "use strict";
+  try{
+    /* 1) Reforço: copia utm_*, fbclid, gclid, ttclid, sck e xcod da URL da página
+          para os links do checkout (só acrescenta o que estiver faltando).       */
+    var KEEP=/^(utm_|fbclid|gclid|ttclid|sck$|xcod$)/;
+    function decorate(a){
+      try{
+        var page=new URLSearchParams(window.location.search);
+        var url=new URL(a.href);
+        page.forEach(function(v,k){
+          if(KEEP.test(k) && !url.searchParams.has(k)) url.searchParams.set(k,v);
+        });
+        a.href=url.toString();
+      }catch(err){}
+    }
+    var sel='a[href*="checkout.movapet.store"]';
+    document.querySelectorAll(sel).forEach(decorate);
+    document.addEventListener("click",function(e){
+      var a=e.target && e.target.closest ? e.target.closest(sel) : null;
+      if(a) decorate(a); /* garante os parâmetros no momento do clique */
+    }, true);
+
+    /* 2) Eventos do Pixel (só disparam se o Pixel estiver ativo) */
+    var cta=document.getElementById("mcCta");
+    if(cta){
+      cta.addEventListener("click",function(){
+        if(typeof fbq!=="function") return;
+        var cor=(document.getElementById("mcColorName")||{}).textContent||"";
+        fbq('track','InitiateCheckout',{
+          content_name:'Escada Mova '+cor,
+          content_category:'Pet',
+          currency:'BRL'
+        });
+      });
+    }
+    var prod=document.getElementById("produto");
+    if(prod && "IntersectionObserver" in window){
+      var seen=false;
+      var io=new IntersectionObserver(function(es){
+        es.forEach(function(en){
+          if(en.isIntersecting && !seen){
+            seen=true; io.disconnect();
+            if(typeof fbq==="function"){
+              fbq('track','ViewContent',{content_name:'Escada Mova',content_category:'Pet',currency:'BRL'});
+            }
+          }
+        });
+      },{threshold:.35});
+      io.observe(prod);
+    }
+  }catch(err){ /* rastreamento nunca derruba o site */ }
 })();
 </script>
 
