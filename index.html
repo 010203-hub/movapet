@@ -762,27 +762,48 @@ section>.wrap{position:relative;z-index:1}
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto} .scroll-hint .chevron{animation:none}}
 
 
-/* ===== BOTÃO "PRÓXIMO" DO HERO (só no celular) ===== */
-.hero-next{display:none}
+/* ===== BOTÃO "PRÓXIMO" DO HERO (todas as telas) ===== */
+.scroll-hint{display:none !important}
 @keyframes hn-nudge{0%,100%{transform:translateY(0)}50%{transform:translateY(3px)}}
+.hero-next{display:inline-flex;align-items:center;gap:.55rem;
+  position:absolute;left:50%;transform:translateX(-50%);
+  bottom:clamp(56px,9vh,110px);z-index:6;pointer-events:auto;cursor:pointer;
+  background:var(--branco);color:var(--petroleo);border:0;
+  font-family:inherit;font-size:.95rem;font-weight:600;line-height:1;
+  padding:1rem 1.6rem;border-radius:100px;
+  box-shadow:0 12px 30px -12px rgba(0,0,0,.5);
+  -webkit-tap-highlight-color:transparent;
+  transition:transform .28s var(--ease),opacity .35s var(--ease),box-shadow .28s var(--ease)}
+.hero-next:hover{box-shadow:0 16px 36px -12px rgba(0,0,0,.6)}
+.hero-next:active{transform:translateX(-50%) scale(.95)}
+.hero-next svg{width:18px;height:18px;animation:hn-nudge 1.6s ease-in-out infinite}
+.hero-next-count{position:absolute;left:50%;transform:translateX(-50%);bottom:-1.65rem;
+  font-size:.7rem;font-weight:500;letter-spacing:.14em;text-transform:uppercase;
+  color:rgba(255,255,255,.72);white-space:nowrap}
+.hero-skip{position:absolute;left:50%;transform:translateX(-50%);
+  bottom:clamp(14px,2.6vh,34px);z-index:6;
+  font-size:.78rem;font-weight:500;letter-spacing:.06em;
+  color:rgba(255,255,255,.62);text-decoration:underline;text-underline-offset:3px;
+  -webkit-tap-highlight-color:transparent;transition:color .3s var(--ease)}
+.hero-skip:hover{color:rgba(255,255,255,.95)}
 @media (max-width:820px){
-  .scroll-hint{display:none !important}
-  .hero-next{display:inline-flex;align-items:center;gap:.55rem;
-    position:absolute;left:50%;transform:translateX(-50%);
-    bottom:clamp(150px,48vw,300px);z-index:6;pointer-events:auto;cursor:pointer;
-    background:var(--branco);color:var(--petroleo);border:0;
-    font-family:inherit;font-size:.95rem;font-weight:600;line-height:1;
-    padding:1rem 1.6rem;border-radius:100px;
-    box-shadow:0 12px 30px -12px rgba(0,0,0,.5);
-    -webkit-tap-highlight-color:transparent;
-    transition:transform .28s var(--ease),opacity .35s var(--ease)}
-  .hero-next:active{transform:translateX(-50%) scale(.95)}
-  .hero-next svg{width:18px;height:18px;animation:hn-nudge 1.6s ease-in-out infinite}
-  .hero-next-count{position:absolute;left:50%;transform:translateX(-50%);bottom:-1.65rem;
-    font-size:.7rem;font-weight:500;letter-spacing:.14em;text-transform:uppercase;
-    color:rgba(255,255,255,.72);white-space:nowrap}
+  .hero-next{bottom:clamp(150px,48vw,300px)}
+  .hero-skip{bottom:clamp(96px,34vw,240px)}
 }
 @media (prefers-reduced-motion:reduce){.hero-next svg{animation:none}}
+
+
+/* ===== SELETOR DE COR JUNTO DA IMAGEM (celular) + destaque na troca ===== */
+@media (max-width:820px){
+  .mc-visual .mc-picker{margin:1.15rem auto 0;margin-bottom:0;max-width:520px;text-align:center}
+  .mc-visual .mc-picker-head{justify-content:center}
+  .mc-visual .mc-swatches{justify-content:center}
+  .mc-sw{width:44px;height:44px}
+  .mc-info .mc-cta-btn{margin-top:.4rem}
+}
+@keyframes mc-flash{0%{box-shadow:0 0 0 0 rgba(139,150,121,.55)}100%{box-shadow:0 0 0 26px rgba(139,150,121,0)}}
+.mc-stage.mc-flash .mc-swap{animation:mc-flash .7s var(--ease) 1;border-radius:24px}
+@media (prefers-reduced-motion:reduce){.mc-stage.mc-flash .mc-swap{animation:none}}
 
 </style>
 </head>
@@ -963,6 +984,7 @@ section>.wrap{position:relative;z-index:1}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
       <span class="hero-next-count" id="heroNextCount">1 de 4</span>
     </button>
+    <a class="hero-skip" href="#produto">Pular para o produto</a>
 
     <div class="scroll-hint" id="scrollHint" aria-hidden="true">
       <div class="pill"></div>
@@ -1684,32 +1706,12 @@ section>.wrap{position:relative;z-index:1}
 </script>
 
 
-<!-- ============ UPGRADES: scroll suave (Lenis) + botões magnéticos ============ -->
-<script src="https://unpkg.com/lenis@1.1.14/dist/lenis.min.js"></script>
+<!-- ============ UPGRADES: botões magnéticos ============ -->
 <script>
 (function(){
   "use strict";
   var reduce=window.matchMedia("(prefers-reduced-motion:reduce)").matches;
   var fine=window.matchMedia("(hover:hover) and (pointer:fine)").matches;
-
-  /* ---- Scroll suave com momentum (degrada sozinho se o Lenis não carregar) ---- */
-  if(!reduce && !window.matchMedia("(pointer:coarse)").matches && typeof window.Lenis!=="undefined"){
-    var lenis=new Lenis({duration:1.1, smoothWheel:true,
-      easing:function(t){return Math.min(1,1.001-Math.pow(2,-10*t));}});
-    function raf(t){ lenis.raf(t); requestAnimationFrame(raf); }
-    requestAnimationFrame(raf);
-    /* âncoras internas rolam suave */
-    document.querySelectorAll('a[href^="#"]').forEach(function(a){
-      a.addEventListener("click",function(e){
-        var id=a.getAttribute("href");
-        if(!id||id.length<2) return;
-        var el=document.querySelector(id);
-        if(!el) return;
-        e.preventDefault();
-        lenis.scrollTo(el,{offset:-8});
-      });
-    });
-  }
 
   /* ---- Botões magnéticos (apenas desktop, muito discreto) ---- */
   if(fine && !reduce){
@@ -1802,12 +1804,43 @@ section>.wrap{position:relative;z-index:1}
 })();
 </script>
 
- <script type="text/javascript">
-    (function(c,l,a,r,i,t,y){
-        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
-        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
-        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
-    })(window, document, "clarity", "script", "xqs6nfltif");
+
+<!-- ============ SELETOR DE COR: POSIÇÃO DINÂMICA (celular) ============ -->
+<script>
+(function(){
+  "use strict";
+  try{
+    var picker = document.querySelector(".mc-picker");
+    var visual = document.querySelector(".mc-visual");
+    var stage  = document.getElementById("mcStage");
+    var cta    = document.getElementById("mcCta");
+    if(!picker || !visual) return;
+    var home = picker.parentNode;           /* .mc-info */
+    var homeAnchor = picker.nextSibling;    /* onde ele estava */
+    var mq = window.matchMedia("(max-width:820px)");
+    function place(){
+      if(mq.matches){
+        if(picker.parentNode !== visual) visual.appendChild(picker);
+      }else{
+        if(picker.parentNode !== home) home.insertBefore(picker, homeAnchor);
+      }
+    }
+    if(mq.addEventListener) mq.addEventListener("change", place);
+    else if(mq.addListener) mq.addListener(place);
+    place();
+    /* brilho suave na imagem ao trocar de cor (guia o olhar) */
+    if(stage){
+      document.querySelectorAll(".mc-sw").forEach(function(b){
+        b.addEventListener("click", function(){
+          stage.classList.remove("mc-flash");
+          void stage.offsetWidth; /* reinicia a animação */
+          stage.classList.add("mc-flash");
+        });
+      });
+      stage.addEventListener("animationend", function(){ stage.classList.remove("mc-flash"); });
+    }
+  }catch(err){ /* nunca derruba o resto do site */ }
+})();
 </script>
 
 </body>
